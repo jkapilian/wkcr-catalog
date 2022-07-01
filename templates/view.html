@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row title">
+	<div class="col-md-10">
+		<a href="{{item.url}}">{{item.title}}</a>
+	</div>
+	<div class="col-md-2">
+		{{item.year}}
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-md-4">
+		<img class="full result" src="{{item.image}}">
+		Located in: {{item.folder}} {% if item.wkcr_location %} {{item.wkcr_location[0].value}} {% endif %}
+	</div>
+	<div class="col-md-4">
+		{% if item.tracklist|length > 0 %}
+			Tracklist
+			<ol>
+				{% for track in item.tracklist %}
+				<li>{{track}}</li>
+				{% endfor %}
+			</ol>
+		{% endif %}
+
+		{% if item.genres|length > 0 %}
+			Genres
+			<ul>
+				{% for genre in item.genres %}
+				<li>{{genre}}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+
+		{% if item.styles|length > 0 %}
+			Styles
+			<ul>
+				{% for style in item.styles %}
+				<li>{{style}}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+	</div>
+	<div class="col-md-4">
+		{% if item.artists|length > 0 %}
+			Artists
+			<ul>
+				{% for artist in item.artists %}
+				<li><a href="/artist/{{artist.id}}">{{artist.name}}</a></li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+
+		{% if item.credits|length > 0 %}
+			Credits
+			<ul>
+				{% for credit in item.credits %}
+				<li><a href="/artist/{{credit.id}}">{{credit.name}}</a></li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+	</div>
+</div>
+<hr>
+
+<div>{{item.notes}}</div>
+<div>Country: {{item.country}}</div>
+<div>
+	{% if item.labels|length > 0 %}
+		Labels
+		<ul>
+			{% for label in item.labels %}
+			<li><a href="/label/{{label.id}}">{{label.name}}</a></li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+</div>
+<div>
+	{% if item.companies|length > 0 %}
+		Companies
+		<ul>
+			{% for company in item.companies %}
+			<li><a href="/label/{{company.id}}">{{company.name}}</a></li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+</div>
+<div>Scanned {{item.wkcr_scanned}}</div>
+
+{% endblock %}

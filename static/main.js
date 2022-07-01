@@ -1,10 +1,8 @@
 $(document).ready(function() {
-	$("#search").keydown(e => {
-		if (e.which == 13) {
-			search();
-		}
+	$("#search-form").submit(function(e) {
+		e.preventDefault();
+		search();
 	});
-	$("#search-button").click(() => search());
 });
 
 function search() {

@@ -2,8 +2,49 @@
 
 {% block content %}
 
-<div class="container">
-    Search for {{query}}
+<script>let results = {{results|tojson}}; let term="{{term}}"</script>
+<script src="{{url_for('static', filename='results.js')}}"></script>
+
+<div class="row title">
+    <div class="col-md-12">
+        {% if version == 'search' %}
+        Search for "{{query}}"
+        {% elif version == 'artist' %}
+        Artist: {{query}}
+        {% else %}
+        Label: {{query}}
+        {% endif %}
+    </div>
 </div>
+
+<div class="col-md-12">
+
+{% if results|length == 0 %}
+    <div class="row">No results found</div>
+{% elif results|length == 1 %}
+    <div class="row">1 result found</div>
+{% else %}
+    <div class="row">{{results|length}} results found</div>
+{% endif %}
+
+    <div class="row">
+        Filter by
+    </div>
+    <div class="row">
+        Media: 
+        <input id="cd" class="check-offset" type="checkbox" checked="true">CD
+        <input id="vinyl" class="check-offset" type="checkbox" checked="true">Vinyl
+    </div>
+    <div class="row">
+        Department: 
+        <input id="jazz" class="check-offset" type="checkbox" checked="true"> Jazz
+        <input id="classical" class="check-offset" type="checkbox" checked="true"> Classical
+        <input id="nm" class="check-offset" type="checkbox" checked="true"> New Music
+    </div>
+</div>
+
+
+<div id="results"></div>
+
 
 {% endblock %}

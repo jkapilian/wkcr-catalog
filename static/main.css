@@ -1,0 +1,37 @@
+.title {
+	font-size: 30px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.larger {
+	font-size: 20px;
+}
+
+.check-offset {
+	margin: 5px;
+}
+
+.full {
+	width: 100%;
+}
+
+.right {
+	text-align: right;
+}
+
+.result {
+	margin-bottom: 20px;
+}
+
+.truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: block;
+	height: 50%;
+}
+
+.bold {
+	font-weight: bold;
+}
