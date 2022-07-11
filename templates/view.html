@@ -2,18 +2,18 @@
 
 {% block content %}
 <div class="row title">
-	<div class="col-md-10">
-		<a href="{{item.url}}">{{item.title}}</a>
+	<div class="col-md-8">
+		<a href="{{item.url}}" target="_blank" rel="noopener noreferrer">{{item.title}}</a>
+		({{item.year}})
 	</div>
-	<div class="col-md-2">
-		{{item.year}}
+	<div class="col-md-4 right">
+		{{item.folder}} {% if item.wkcr_location %} {{item.wkcr_location[0].value}} {% endif %}
 	</div>
 </div>
 
 <div class="row">
 	<div class="col-md-4">
-		<img class="full result" src="{{item.image}}">
-		Located in: {{item.folder}} {% if item.wkcr_location %} {{item.wkcr_location[0].value}} {% endif %}
+		<img class="full result" src="{{item.image}}" alt="Album cover of {{item.title}}">
 	</div>
 	<div class="col-md-4">
 		{% if item.tracklist|length > 0 %}

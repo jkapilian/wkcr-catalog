@@ -1,4 +1,7 @@
+from datetime import timedelta, date, datetime
 from os import sync
+import threading
+from turtle import update
 from flask import Flask
 from flask import render_template
 from flask import Response, request, jsonify
@@ -8,19 +11,19 @@ import discogs_client
 import json
 app = Flask(__name__)
 d = discogs_client.Client('ExampleApplication/0.1', user_token="lzXNWHvkWFJNbyDRonbOoQwhttIRsyGxDTWbpxmX")
-syncCount = d.identity().num_collection
 collection = json.loads(open("static/base.json").read())
 # collection = {}
 
 def updateCollection():
+   tomorrow = date.today() + timedelta(days=1)
+   next_2am = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 2)
+   delta = (next_2am - datetime.now()).total_seconds
+   threading.Timer(delta, updateCollection).start()
    global d
-   global syncCount
    global collection
-   syncCount = d.identity().num_collection
    for i in range(1,len(d.identity().collection_folders)):
       name = d.identity().collection_folders[i].name
       for item in d.identity().collection_folders[i].releases:
-         print(len(collection))
          release = item.release
          releaseObject = {
             "id": item.instance_id,
@@ -45,7 +48,8 @@ def updateCollection():
          if release.images and release.images[0] and release.images[0]['uri']:
             releaseObject['image'] = release.images[0]['uri']
          collection[item.instance_id] = releaseObject
-   print(json.dumps(collection))
+   print("here!")
+   print(datetime.now())
    return
 
 def tracklist(tracks):
@@ -103,7 +107,8 @@ def objectSearch(query, param1, param2):
 
 @app.route('/')
 def home():
-   return render_template('home.html')
+   global collection
+   return render_template('home.html', length=len(collection))
 
 @app.route('/search/<query>')
 def search(query):
@@ -279,5 +284,8 @@ def label(id):
    return render_template('search.html', results=results, query=name, version='label')
 
 if __name__ == '__main__':
-   # updateCollection()
+   tomorrow = date.today() + timedelta(days=1)
+   next_2am = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 2)
+   delta = (next_2am - datetime.now()).total_seconds()
+   threading.Timer(delta, updateCollection).start()
    app.run(debug = True)

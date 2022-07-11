@@ -24,6 +24,7 @@ const mapping = {
 }
 
 function listResults() {
+	let count = 0;
 	$("#results").empty();
 	for (item of results) {
 		let location = item.folder.split(' ');
@@ -60,7 +61,7 @@ function listResults() {
 
 			let otherInfo = $("<div class='col-md-11'>");
 			let otherInfoTop = $("<div class='row truncate info'>");
-			let otherInfoBottom = $("<div class='row truncate info'>");
+			let otherInfoBottom = $("<div class='row truncate'>");
 			
 			let artists = item.artists.reduce(
 				(prev, cur, ind) => ind == (item.artists.length-1) ? prev += cur.name : prev += `${cur.name}, `, ""
@@ -83,14 +84,19 @@ function listResults() {
 			let tracks = item.tracklist.reduce(
 				(prev, cur, ind) => ind == (item.tracklist.length-1) ? prev += cur : prev += `${cur}, `, ""
 			);
-			otherInfoBottom.html(`Tracks: ${tracks}`)
+			otherInfoBottom.html(`Tracks: <span class='info'>${tracks}</span>`)
 			otherInfo.append(otherInfoBottom);
 			secondRow.append(otherInfo);
 
 
 			$("#results").append(container);
+			count ++;
 		}
 	}
+
+	$("#num-results").html(
+		`${count === 0 ? 'No' : count} result${count === 1 ? '' : 's'} found`
+	);
 
 	let regex = new RegExp(term, "i");
 	$(".info").each(function(_, element) {
