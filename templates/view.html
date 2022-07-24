@@ -18,11 +18,13 @@
 	<div class="col-md-4">
 		{% if item.tracklist|length > 0 %}
 			Tracklist
-			<ol>
 				{% for track in item.tracklist %}
-				<li>{{track}}</li>
+				<div class="row">
+					<div class="col-md-2">{{track.position}}</div>
+					<div class="col-md-8">{{track.title}}</div>
+					<div class="col-md-2">{{track.duration}}</div>
+				</div>
 				{% endfor %}
-			</ol>
 		{% endif %}
 
 		{% if item.genres|length > 0 %}
@@ -87,6 +89,5 @@
 		</ul>
 	{% endif %}
 </div>
-<div>Scanned {{item.wkcr_scanned}}</div>
 
 {% endblock %}

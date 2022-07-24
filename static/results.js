@@ -1,4 +1,5 @@
 $(document).ready(function() {
+	console.log(results);
 	listResults();
 
 	$("input").click(function() {
@@ -13,12 +14,14 @@ let filters = {
 	"jazz": true,
 	"classical": true,
 	"nm": true,
+	"bach": true,
 }
 
 const mapping = {
 	"Jazz": "jazz",
 	"Classical": "classical",
 	"New": "nm",
+	"Bach": "bach",
 	"CD": "cd",
 	"Vinyl": "vinyl"
 }
@@ -82,7 +85,7 @@ function listResults() {
 			otherInfo.append(otherInfoTop);
 
 			let tracks = item.tracklist.reduce(
-				(prev, cur, ind) => ind == (item.tracklist.length-1) ? prev += cur : prev += `${cur}, `, ""
+				(prev, cur, ind) => ind == (item.tracklist.length-1) ? prev += cur.title : prev += `${cur.title}, `, ""
 			);
 			otherInfoBottom.html(`Tracks: <span class='info'>${tracks}</span>`)
 			otherInfo.append(otherInfoBottom);
