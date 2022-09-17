@@ -15,6 +15,8 @@ let filters = {
 	"classical": true,
 	"nm": true,
 	"bach": true,
+	"country": true,
+	"uncategorized": true,
 }
 
 const mapping = {
@@ -22,8 +24,10 @@ const mapping = {
 	"Classical": "classical",
 	"New": "nm",
 	"Bach": "bach",
+	"Country": "country",
 	"CD": "cd",
-	"Vinyl": "vinyl"
+	"Vinyl": "vinyl",
+	"Uncategorized": "uncategorized"
 }
 
 function listResults() {
@@ -38,11 +42,11 @@ function listResults() {
 			container.append(firstRow);
 			container.append(secondRow);
 
-			let linkContainer = $("<div class='col-md-8'>");
+			let linkContainer = $("<div class='col-md-8 col-6'>");
 			let link = $(`<a class='info' href='/view/${item.id}'>${item.title}</a>`);
 			linkContainer.append(link)
 
-			let locationContainer = $("<div class='col-md-4 right'>");
+			let locationContainer = $("<div class='col-md-4 col-6 right'>");
 			let location = $("<b>");
 			if (item.wkcr_location) {
 				location.html(`${item.folder} ${item.wkcr_location[0].value}`);
@@ -55,14 +59,14 @@ function listResults() {
 			firstRow.append(linkContainer);
 			firstRow.append(locationContainer);
 
-			let imageContainer = $("<div class='col-md-1'>");
+			let imageContainer = $("<div class='col-lg-1 col-sm-2 col-3'>");
 			let imageLink = $(`<a href='/view/${item.id}'>`);
 			let image = $(`<img class='full' src='${item.image}'>`);
 			imageLink.append(image)
 			imageContainer.append(imageLink);
 			secondRow.append(imageContainer);
 
-			let otherInfo = $("<div class='col-md-11'>");
+			let otherInfo = $("<div class='col-lg-11 col-sm-10 col-9'>");
 			let otherInfoTop = $("<div class='row truncate info'>");
 			let otherInfoBottom = $("<div class='row truncate'>");
 			

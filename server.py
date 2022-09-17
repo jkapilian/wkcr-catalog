@@ -9,8 +9,11 @@ import time
 import copy
 import requests
 import json
+from dotenv import load_dotenv
+
 app = Flask(__name__)
-TOKEN = 'lzXNWHvkWFJNbyDRonbOoQwhttIRsyGxDTWbpxmX'
+load_dotenv()
+TOKEN = os.environ.get('DISCOGS_API_KEY')
 collection = json.loads(open("static/new_base.json").read())
 d_releases = json.loads(open("static/releases.json").read())
 
@@ -20,7 +23,13 @@ def requestWrapper(url):
    global last_rate
    if (time.time() - last_rate) > 60:
       resp = requests.get(url)
-      if resp.headers['X-Discogs-Ratelimit-Remaining'] == '1':
+      if resp.headers['X-Discogs-Ratelimit-Remaining'] == '0':
+         last_rate = time.time()
+         print(f'Sleeping for {last_rate + 60 - time.time()}')
+         print(f'Indexed {len(d_releases)} releases')
+         time.sleep(last_rate + 60 - time.time())
+         return requestWrapper(url)
+      elif resp.headers['X-Discogs-Ratelimit-Remaining'] == '1':
          last_rate = time.time()
       return resp.json()
    else:
@@ -30,13 +39,14 @@ def requestWrapper(url):
       return requestWrapper(url)
 
 def updateCollection():
+   print('starting')
    tomorrow = date.today() + timedelta(days=1)
    next_2am_eastern = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 7)
    delta = (next_2am_eastern - datetime.now()).total_seconds()
    threading.Timer(delta, updateCollection).start()
    global collection
    global d_releases
-   folders = requests.get(f'https://api.discogs.com/users/WKCR/collection/folders?token={TOKEN}&per_page=100').json()
+   folders = requestWrapper(f'https://api.discogs.com/users/WKCR/collection/folders?token={TOKEN}&per_page=100')
    for folder in folders['folders']:
       if folder['id'] != 0:
          name = folder['name']
@@ -45,8 +55,8 @@ def updateCollection():
          releases = requestWrapper(f'{url}/releases?token={TOKEN}')
          while True:
             for release in releases['releases']:
-               collection[release['instance_id']] = release
-               collection[release['instance_id']]["folder"] = name
+               collection[str(release['instance_id'])] = release
+               collection[str(release['instance_id'])]["folder"] = name
                if str(release['id']) not in d_releases:
                   print(release['id'])
                   pull_release(release['id'], release['basic_information']['resource_url'])
@@ -54,12 +64,13 @@ def updateCollection():
                print(f'here at {len(d_releases)}')
                break
             releases = requestWrapper(releases['pagination']['urls']['next'])            
+   open("static/test_collection.json", "a").write(json.dumps(collection))
    return
 
 def pull_release(release_id, url):
    global d_releases
    release_info = requestWrapper(f'{url}?token={TOKEN}')
-   d_releases[release_id] = release_info
+   d_releases[str(release_id)] = release_info
 
 def for_search(id):
    global collection
@@ -97,7 +108,8 @@ def for_view(id):
       "genres": item["basic_information"]["genres"],
       "styles": item["basic_information"]["styles"],
       "notes": d_release["notes"] if "notes" in d_release else "",
-      "identifiers": d_release["identifiers"]
+      "identifiers": d_release["identifiers"],
+      "url": d_release["uri"],
    }
 
 def tracklist(tracks):
@@ -360,8 +372,6 @@ if __name__ == '__main__':
    delta = (next_2am_eastern - datetime.now()).total_seconds()
    threading.Timer(delta, updateCollection).start()
    try:
-      app.run(debug = True)
+      app.run(debug = False, use_reloader = False)
    except KeyboardInterrupt:
       os._exit(1)
-   # updateCollection()
-   # open("static/new_base.json", "a").write(json.dumps(collection))

@@ -1,3 +1,7 @@
+.main-content {
+	margin-top: 56px;
+}
+
 .title {
 	font-size: 24px;
 	margin-top: 10px;
@@ -34,4 +38,25 @@
 
 .bold {
 	font-weight: bold;
+}
+
+.blueBackground {
+	background-color: #cce3f0;
+}
+
+button.blueBackground:hover {
+	background-color: #4eb5f0;
+}
+
+a {
+	color: #0094e4;
+}
+
+.height {
+	height: 24px;
+}
+
+.center {
+	display: block;
+	margin: 0 auto;
 }

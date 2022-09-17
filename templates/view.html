@@ -2,33 +2,34 @@
 
 {% block content %}
 <div class="row title">
-	<div class="col-md-8">
+	<div class="col-md-8 col-6">
 		<a href="{{item.url}}" target="_blank" rel="noopener noreferrer">{{item.title}}</a>
 		({{item.year}})
 	</div>
-	<div class="col-md-4 right">
+	<div class="col-md-4 col-6 right">
 		{{item.folder}} {% if item.wkcr_location %} {{item.wkcr_location[0].value}} {% endif %}
 	</div>
 </div>
 
 <div class="row">
-	<div class="col-md-4">
+	<div class="col-md-3 col-sm-4 col-12">
 		<img class="full result" src="{{item.image}}" alt="Album cover of {{item.title}}">
+		<button id="open" data-link="https://spinitron.com/m/spin/chart?type=1&endingCount=100&endingRange=months&artist_name={{item.artists[0].name}}&release_title={{item.title}}" class="btn blueBackground result center">Previous Spins</button>
 	</div>
-	<div class="col-md-4">
+	<div class="col-md-5 col-sm-8 col-12">
 		{% if item.tracklist|length > 0 %}
-			Tracklist
+			<b>Tracklist</b>
 				{% for track in item.tracklist %}
 				<div class="row">
-					<div class="col-md-2">{{track.position}}</div>
-					<div class="col-md-8">{{track.title}}</div>
-					<div class="col-md-2">{{track.duration}}</div>
+					<div class="col-md-2 col-2">{{track.position}}</div>
+					<div class="col-md-8 col-8">{{track.title}}</div>
+					<div class="col-md-2 col-2">{{track.duration}}</div>
 				</div>
 				{% endfor %}
 		{% endif %}
 
 		{% if item.genres|length > 0 %}
-			Genres
+			<b>Genres</b>
 			<ul>
 				{% for genre in item.genres %}
 				<li>{{genre}}</li>
@@ -37,7 +38,7 @@
 		{% endif %}
 
 		{% if item.styles|length > 0 %}
-			Styles
+			<b>Styles</b>
 			<ul>
 				{% for style in item.styles %}
 				<li>{{style}}</li>
@@ -45,21 +46,27 @@
 			</ul>
 		{% endif %}
 	</div>
-	<div class="col-md-4">
+	<div class="col-md-4 col-12">
 		{% if item.artists|length > 0 %}
-			Artists
+			<b>Artists</b>
 			<ul>
 				{% for artist in item.artists %}
-				<li><a href="/artist/{{artist.id}}">{{artist.name}}</a></li>
+				<li>
+					<a href="/artist/{{artist.id}}">{{artist.name}}</a>
+					{{artist.role}}
+				</li>
 				{% endfor %}
 			</ul>
 		{% endif %}
 
 		{% if item.credits|length > 0 %}
-			Credits
+			<b>Credits</b>
 			<ul>
 				{% for credit in item.credits %}
-				<li><a href="/artist/{{credit.id}}">{{credit.name}}</a></li>
+				<li>
+					<a href="/artist/{{credit.id}}">{{credit.name}}</a>
+					{{credit.role}}
+				</li>
 				{% endfor %}
 			</ul>
 		{% endif %}
@@ -68,10 +75,10 @@
 <hr>
 
 <div>{{item.notes}}</div>
-<div>Country: {{item.country}}</div>
+<div><b>Country</b> {{item.country}}</div>
 <div>
 	{% if item.labels|length > 0 %}
-		Labels
+		<b>Labels</b>
 		<ul>
 			{% for label in item.labels %}
 			<li><a href="/label/{{label.id}}">{{label.name}}</a></li>
@@ -81,7 +88,7 @@
 </div>
 <div>
 	{% if item.companies|length > 0 %}
-		Companies
+		<b>Companies</b>
 		<ul>
 			{% for company in item.companies %}
 			<li><a href="/label/{{company.id}}">{{company.name}}</a></li>

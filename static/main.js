@@ -3,6 +3,15 @@ $(document).ready(function() {
 		e.preventDefault();
 		search();
 	});
+
+	$("#open").click(function() {
+		console.log('clicked!')
+		window.open(this.dataset.link, '_blank');
+	});
+
+	fixContent();
+
+	$(window).resize(fixContent);
 });
 
 function search() {
@@ -10,4 +19,8 @@ function search() {
 	if (query) {
 		window.location.href = "/search/" + query;
 	}
+}
+
+function fixContent() {
+	$(".main-content").css("margin-top", $("#navbar").css("height"));
 }
