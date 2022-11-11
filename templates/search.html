@@ -52,5 +52,14 @@
 
 <div id="results"></div>
 
+<div id="pagination">
+    {% if page > 1 %}
+        <a href="?page={{page - 1}}">prev</a>
+    {% endif %}
+    {% if page < max_page %}
+        <a href="?page={{page + 1}}">next</a>
+    {% endif %}
+</div>
+
 
 {% endblock %}

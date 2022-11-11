@@ -1,41 +1,68 @@
 from datetime import timedelta, date, datetime
 import os
 import threading
-from turtle import update
 from flask import Flask
 from flask import render_template
-from flask import Response, request, jsonify
+from flask import request
 import time
 import copy
 import requests
 import json
 from dotenv import load_dotenv
+import typesense
+import math
 
 app = Flask(__name__)
 load_dotenv()
 TOKEN = os.environ.get('DISCOGS_API_KEY')
-collection = json.loads(open("static/new_base.json").read())
-d_releases = json.loads(open("static/releases.json").read())
+# Use the application default credentials.
+
+
+client = typesense.Client({
+   'api_key': 'xyz',
+   'nodes': [{
+      'host': 'localhost',
+      'port': '8108',
+      'protocol': 'http'
+   }],
+   'connectionTimeoutSeconds': 2
+})
+'''client.collections['collection'].delete()
+
+client.collections.create({
+   "name": "collection",
+   "fields": [
+      {"name": ".*", "type": "auto" },
+      # {"name": "artists", "type": "auto", "index": False},
+      # {"name": "labels", "type": "auto", "index": False},
+      # {"name": "credits", "type": "auto", "index": False},
+      # {"name": "tracklist", "type": "auto", "index": False},
+      # {"name": "identifiers", "type": "auto", "index": False}
+   ]
+})'''
+
+
 
 last_rate = 0
 
 def requestWrapper(url):
    global last_rate
-   if (time.time() - last_rate) > 60:
+   cur_time = time.time()
+   if (cur_time - last_rate) > 60:
       resp = requests.get(url)
       if resp.headers['X-Discogs-Ratelimit-Remaining'] == '0':
-         last_rate = time.time()
-         print(f'Sleeping for {last_rate + 60 - time.time()}')
-         print(f'Indexed {len(d_releases)} releases')
-         time.sleep(last_rate + 60 - time.time())
+         last_rate = cur_time
+         print(f'Sleeping for {last_rate + 60 - cur_time}')
+         print(f'Indexed {client.collections["collection"].retrieve()["num_documents"]} releases')
+         time.sleep(last_rate + 60 - cur_time)
          return requestWrapper(url)
       elif resp.headers['X-Discogs-Ratelimit-Remaining'] == '1':
-         last_rate = time.time()
+         last_rate = cur_time
       return resp.json()
    else:
-      print(f'Sleeping for {last_rate + 60 - time.time()}')
-      print(f'Indexed {len(d_releases)} releases')
-      time.sleep(last_rate + 60 - time.time())
+      print(f'Sleeping for {last_rate + 60 - cur_time}')
+      print(f'Indexed {client.collections["collection"].retrieve()["num_documents"]} releases')
+      time.sleep(last_rate + 60 - cur_time)
       return requestWrapper(url)
 
 def updateCollection():
@@ -44,8 +71,7 @@ def updateCollection():
    next_2am_eastern = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 7)
    delta = (next_2am_eastern - datetime.now()).total_seconds()
    threading.Timer(delta, updateCollection).start()
-   global collection
-   global d_releases
+   global client
    folders = requestWrapper(f'https://api.discogs.com/users/WKCR/collection/folders?token={TOKEN}&per_page=100')
    for folder in folders['folders']:
       if folder['id'] != 0:
@@ -55,258 +81,200 @@ def updateCollection():
          releases = requestWrapper(f'{url}/releases?token={TOKEN}')
          while True:
             for release in releases['releases']:
-               collection[str(release['instance_id'])] = release
-               collection[str(release['instance_id'])]["folder"] = name
-               if str(release['id']) not in d_releases:
+               try:
+                  client.collections["collection"].documents[str(release["instance_id"])].update({
+                     "folder": name,
+                     "wkcr_location": release["notes"][0]["value"] if ("notes" in release) else None,
+                  })
+               except:
                   print(release['id'])
-                  pull_release(release['id'], release['basic_information']['resource_url'])
+                  url = release['basic_information']['resource_url']
+                  release_info = requestWrapper(f'{url}?token={TOKEN}')
+                  
+                  artists = []
+                  for artist in release["basic_information"]["artists"]:
+                     artists.append(json.dumps(artist))
+                  labels = []
+                  for label in release["basic_information"]["labels"]:
+                     labels.append(json.dumps(label))
+                  credits = []
+                  for credit in release_info["extraartists"]:
+                     credits.append(json.dumps(credit))
+                  tracklist = []
+                  for track in release_info["tracklist"]:
+                     tracklist.append(json.dumps(track))
+                  identifiers = []
+                  for identifier in release_info["identifiers"]:
+                     identifiers.append(json.dumps(identifier))
+
+                  client.collections["collection"].documents.create({
+                     "id": str(release["instance_id"]),
+                     "title": release["basic_information"]["title"],
+                     "folder": name,
+                     "wkcr_location": release["notes"][0]["value"] if ("notes" in release) else None,
+                     "image": release["basic_information"]["cover_image"],
+                     "artists": artists,
+                     "year": str(release["basic_information"]["year"]),
+                     "labels": labels,
+                     "genres": release["basic_information"]["genres"],
+                     "styles": release["basic_information"]["styles"],
+                     "credits": credits,
+                     "tracklist": tracklist,
+                     "country": release_info["country"] if "country" in release_info else "",
+                     "notes": release_info["notes"] if "notes" in release_info else "",
+                     "identifiers": identifiers,
+                     "url": release_info["uri"],
+                  })
+               
+               
             if 'next' not in releases['pagination']['urls']:
-               print(f'here at {len(d_releases)}')
+               print(f'here at {client.collections["collection"].retrieve()["num_documents"]}')
                break
             releases = requestWrapper(releases['pagination']['urls']['next'])            
-   open("static/test_collection.json", "a").write(json.dumps(collection))
    return
 
-def pull_release(release_id, url):
-   global d_releases
-   release_info = requestWrapper(f'{url}?token={TOKEN}')
-   d_releases[str(release_id)] = release_info
-
-def for_search(id):
-   global collection
-   global d_releases
-   item = collection[id]
-   d_release = d_releases[str(item["id"])]
-   return {
-      "id": item["instance_id"],
-      "title": item["basic_information"]["title"],
-      "folder": item["folder"],
-      "wkcr_location": item["notes"] if ("notes" in item) else None,
-      "image": item["basic_information"]["cover_image"],
-      "artists": item["basic_information"]["artists"],
-      "credits": d_release["extraartists"],
-      "tracklist": d_release["tracklist"],
-   }
-
 def for_view(id):
-   global collection
-   global d_releases
-   item = collection[id]
-   d_release = d_releases[str(item["id"])]
-   return {
-      "id": item["instance_id"],
-      "title": item["basic_information"]["title"],
-      "folder": item["folder"],
-      "wkcr_location": item["notes"] if ("notes" in item) else None,
-      "image": item["basic_information"]["cover_image"],
-      "artists": item["basic_information"]["artists"],
-      "credits": d_release["extraartists"],
-      "tracklist": d_release["tracklist"],
-      "year": item["basic_information"]["year"],
-      "country": d_release["country"] if "country" in d_release else "",
-      "labels": item["basic_information"]["labels"],
-      "genres": item["basic_information"]["genres"],
-      "styles": item["basic_information"]["styles"],
-      "notes": d_release["notes"] if "notes" in d_release else "",
-      "identifiers": d_release["identifiers"],
-      "url": d_release["uri"],
-   }
+   global db
+   global client
+   item = client.collections["collection"].documents[id].retrieve()
+   artists = []
+   for artist in item["artists"]:
+      artists.append(json.loads(artist))
+   item["artists"] = artists
+   labels = []
+   for label in item["labels"]:
+      labels.append(json.loads(label))
+   item["labels"] = labels
+   credits = []
+   for credit in item["credits"]:
+      credits.append(json.loads(credit))
+   item["credits"] = credits
+   tracklist = []
+   for track in item["tracklist"]:
+      tracklist.append(json.loads(track))
+   item["tracklist"] = tracklist
+   identifiers = []
+   for identifier in item["identifiers"]:
+      identifiers.append(json.loads(identifier))
+   item["identifiers"] = identifiers
+   return item
 
-def tracklist(tracks):
-   arr = []
-   for track in tracks:
-      arr.append(track.title)
-   return arr
-
-def object_list(list):
-   arr = []
-   for item in list:
-      arr.append({"id": item.id, "name": item.name})
-   return arr
-
-def paramSearch(query, param):
-   global collection
-   results = []
-   for key in collection:
-      if query in str(collection[key]['basic_information'][param]).lower():
-         results.append(for_search(key))
-         continue
-   return results
-
-def releaseSearch(query, param):
-   global collection
-   global d_releases
-   results = []
-   for key in collection:
-      d_id = str(collection[key]["id"])
-      d_release = d_releases[d_id]
-      if param in d_release and query in str(d_release[param]).lower():
-         results.append(for_search(key))
-         continue
-   return results
-
-def listSearch(query, param):
-   global collection
-   results = []
-   for key in collection:
-      for item in collection[key]['basic_information'][param]:
-         if query in item.lower():
-            results.append(for_search(key))
-            break
-   return results
-
-def objectSearch(query, param_within, param1, param2=None):
-   global collection
-   global d_releases
-   results = []
-   for key in collection:
-      d_id = str(collection[key]["id"])
-      d_release = d_releases[d_id]
-      flag = False
-      for item in d_release[param1]:
-         if query in item[param_within].lower():
-            flag = True
-            results.append(for_search(key))
-            break
-      if flag or not param2:
-         continue
-
-      for item in d_release[param2]:
-         if query in item[param_within].lower():
-            results.append(for_search(key))
-            break
-   return results
+def unflatten(results):
+   ret = []
+   for result in results["hits"]:
+      item = copy.deepcopy(result["document"])
+      artists = []
+      for artist in item["artists"]:
+         artists.append(json.loads(artist))
+      item["artists"] = artists
+      labels = []
+      for label in item["labels"]:
+         labels.append(json.loads(label))
+      item["labels"] = labels
+      credits = []
+      for credit in item["credits"]:
+         credits.append(json.loads(credit))
+      item["credits"] = credits
+      tracklist = []
+      for track in item["tracklist"]:
+         tracklist.append(json.loads(track))
+      item["tracklist"] = tracklist
+      identifiers = []
+      for identifier in item["identifiers"]:
+         identifiers.append(json.loads(identifier))
+      item["identifiers"] = identifiers
+      ret.append(item)
+   return ret
 
 # ROUTES
 
 
 @app.route('/')
 def home():
-   global collection
-   return render_template('home.html', length=len(collection))
+   global count
+   return render_template('home.html', length=client.collections["collection"].retrieve()["num_documents"])
 
 @app.route('/search/<query>')
 def search(query):
+   page = request.args.get("page", default=1, type=int)
    global collection
+   global client
    queryLower = query.lower()
    term = queryLower
    if queryLower[0:6] == "title:":
       term = queryLower[6:].strip()
-      results = paramSearch(term, "title")
+      results = client.collections['collection'].documents.search({
+         'q': term,
+         'query_by': 'title',
+         'page': page
+      })
    elif queryLower[0:5] == "year:":
       term = queryLower[5:].strip()
-      results = paramSearch(term, "year")
+      results = client.collections['collection'].documents.search({
+         'q': term,
+         'query_by': 'year',
+         'page': page
+      })
    elif queryLower[0:8] == "country:":
       term = queryLower[8:].strip()
-      results = releaseSearch(term, "country")
+      results = client.collections['collection'].documents.search({
+         'q': term,
+         'query_by': 'country',
+         'page': page
+      })
    elif queryLower[0:6] == "notes:":
       term = queryLower[6:].strip()
-      results = releaseSearch(term, "notes")
+      results = client.collections['collection'].documents.search({
+         'q': term,
+         'query_by': 'notes',
+         'page': page
+      })
    elif queryLower[0:6] == "genre:":
       term = queryLower[6:].strip()
-      results = listSearch(term, "genres")
+      results = client.collections['collection'].documents.search({
+         'q': term,
+         'query_by': 'genres',
+         'page': page
+      })
    elif queryLower[0:6] == "style:":
       term = queryLower[6:].strip()
-      results = listSearch(term, "styles")
+      results = client.collections['collection'].documents.search({
+         'q': term,
+         'query_by': 'styles',
+         'page': page
+      })
    elif queryLower[0:5] == "song:":
       term = queryLower[5:].strip()
-      results = objectSearch(term, "title", "tracklist")
+      results = client.collections['collection'].documents.search({
+         'q': term,
+         'query_by': 'tracklist',
+         'page': page
+      })
    elif queryLower[0:7] == "artist:":
       term = queryLower[7:].strip()
-      results = objectSearch(term, "name", "artists", "extraartists")
+      results = client.collections['collection'].documents.search({
+         'q': term,
+         'query_by': ['artists', 'credits'],
+         'page': page
+      })
    elif queryLower[0:6] == "label:":
-      term = queryLower[6:]
-      results = objectSearch(term, "name", "labels", "companies")
+      term = queryLower[6:].strip()
+      results = client.collections['collection'].documents.search({
+         'q': term,
+         'query_by': 'labels',
+         'page': page
+      })
    else:
-      results = []
-      for key in collection:
-         flag = False
-         d_id = str(collection[key]["id"])
-         d_release = d_releases[d_id]
-         if queryLower in collection[key]["basic_information"]["title"].lower():
-            loc = int(0.5*len(results)*(1-len(queryLower)/len(collection[key]["basic_information"]["title"])))
-            results.insert(loc, for_search(key))
-            continue
+      results = client.collections['collection'].documents.search({
+         'q': queryLower,
+         'query_by': ['title', 'artists', 'year', 'tracklist', 'country', 'labels', 'genres', 'styles', 'credits', 'notes'],
+         'page': page
+      })
 
-         for track in d_release["tracklist"]:
-            if queryLower in track["title"].lower():
-               loc = int(0.5*len(results)*(1-len(queryLower)/len(track)))
-               results.insert(loc, for_search(key))
-               flag = True
-               break
-         if flag:
-            continue
-
-         for artist in collection[key]["basic_information"]["artists"]:
-            if queryLower in artist["name"].lower():
-               loc = int(0.5*len(results)*(1-len(queryLower)/len(artist["name"])))
-               results.insert(loc, for_search(key))
-               flag = True
-               break
-         if flag:
-            continue
-
-         for artist in d_release["extraartists"]:
-            if queryLower in artist["name"].lower():
-               loc = int(0.5*len(results)*(1-len(queryLower)/len(artist["name"])))
-               results.insert(loc, for_search(key))
-               flag = True
-               break
-         if flag:
-            continue
- 
-         if "year" in collection[key]["basic_information"] and queryLower in str(collection[key]["basic_information"]["year"]).lower():
-            loc = int(0.5*len(results)*(2-len(queryLower)/len(collection[key]["basic_information"]["title"])))
-            results.insert(loc, for_search(key))
-            continue
-
-         if "country" in d_release and queryLower in str(d_release["country"]).lower():
-            loc = int(0.5*len(results)*(2-len(queryLower)/len(d_release["country"])))
-            results.insert(loc, for_search(key))
-            continue
-         
-         if "notes" in d_release and queryLower in str(d_release["notes"]).lower():
-            loc = int(0.5*len(results)*(2-len(queryLower)/len(d_release["notes"])))
-            results.insert(loc, for_search(key))
-            continue
-
-         for genre in collection[key]["basic_information"]["genres"]:
-            if queryLower in genre.lower():
-               loc = int(0.5*len(results)*(2-len(queryLower)/len(genre)))
-               results.insert(loc, for_search(key))
-               flag = True
-               break
-         if flag:
-            continue
-
-         for style in collection[key]["basic_information"]["styles"]:
-            if queryLower in style.lower():
-               loc = int(0.5*len(results)*(2-len(queryLower)/len(style)))
-               results.insert(loc, for_search(key))
-               break
-         if flag:
-            continue
-
-         for label in collection[key]["basic_information"]["labels"]:
-            if queryLower in label["name"].lower():
-               loc = int(0.5*len(results)*(2-len(queryLower)/len(label["name"])))
-               results.insert(loc, for_search(key))
-               flag = True
-               break
-         if flag:
-            continue
-
-         for label in d_release["companies"]:
-            if queryLower in label["name"].lower():
-               loc = int(0.5*len(results)*(2-len(queryLower)/len(label["name"])))
-               results.insert(loc, for_search(key))
-               flag = True
-               break
-         if flag:
-            continue
-
+   ret = unflatten(results)
+   max_page = math.ceil(results["found"]/10)
    
-   return render_template('search.html', query=query, results=results, version='search', term=term)
+   return render_template('search.html', query=query, results=ret, version='search', term=term, page=page, max_page = max_page)
 
 @app.route('/view/<id>')
 def view(id):
@@ -314,63 +282,17 @@ def view(id):
 
 @app.route('/artist/<id>')
 def artist(id):
-   global collection
-   global d_releases
-   results = []
-   for key in collection:
-      d_id = str(collection[key]["id"])
-      d_release = d_releases[d_id]
-      flag = False
-      for artist in collection[key]["basic_information"]["artists"]:
-         if str(artist["id"]) == id:
-            flag = True
-            name = artist["name"]
-            break
-      if flag:
-         results.append(for_search(key))
-         continue
-      for artist in d_release["extraartists"]:
-         if str(artist["id"]) == id:
-            flag = True
-            name = artist["name"]
-            break
-      if flag:
-         results.append(for_search(key))
-         continue
-   return render_template('search.html', results=results, query=name, version='artist')
+   return 'will be implemented soon!'
 
 @app.route('/label/<id>')
 def label(id):
-   global collection
-   global d_releases
-   results = []
-   for key in collection:
-      d_id = str(collection[key]["id"])
-      d_release = d_releases[d_id]
-      flag = False
-      for label in collection[key]["basic_information"]["labels"]:
-         if str(label["id"]) == id:
-            flag = True
-            name = label["name"]
-            break
-      if flag:
-         results.append(for_search(key))
-         continue
-      for company in d_release["companies"]:
-         if str(company["id"]) == id:
-            flag = True
-            name = company["name"]
-            break
-      if flag:
-         results.append(for_search(key))
-         continue
-   return render_template('search.html', results=results, query=name, version='label')
+   return 'will be implemented soon!'
 
 if __name__ == '__main__':
    tomorrow = date.today() + timedelta(days=1)
    next_2am_eastern = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 7)
    delta = (next_2am_eastern - datetime.now()).total_seconds()
-   threading.Timer(delta, updateCollection).start()
+   threading.Timer(0, updateCollection).start()
    try:
       app.run(debug = False, use_reloader = False)
    except KeyboardInterrupt:

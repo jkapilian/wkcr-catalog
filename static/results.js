@@ -49,7 +49,7 @@ function listResults() {
 			let locationContainer = $("<div class='col-md-4 col-6 right'>");
 			let location = $("<b>");
 			if (item.wkcr_location) {
-				location.html(`${item.folder} ${item.wkcr_location[0].value}`);
+				location.html(`${item.folder} ${item.wkcr_location}`);
 			}
 			else {
 				location.html(`${item.folder}`);
