@@ -60,3 +60,7 @@ a {
 	display: block;
 	margin: 0 auto;
 }
+
+.pag-button {
+	padding-right: 10px;
+}

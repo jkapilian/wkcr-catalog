@@ -1,9 +1,12 @@
 $(document).ready(function() {
 	console.log(results);
+	checkLinks();
+	fixLinks();
 	listResults();
 
 	$("input").click(function() {
 		filters[this.id] = this.checked;
+		fixLinks();
 		listResults();
 	});
 });
@@ -28,6 +31,30 @@ const mapping = {
 	"CD": "cd",
 	"Vinyl": "vinyl",
 	"Uncategorized": "uncategorized"
+}
+
+function checkLinks() {
+	let uc_arr = uc.split(',');
+	for (field of uc_arr) {
+		if (field != "") {
+			filters[field] = false;
+			$(`#${field}`).attr("checked", false);
+		}
+		
+	}
+}
+
+function fixLinks() {
+	let str = "";
+	for (label in filters) {
+		if (filters[label] == false) {
+			str += label;
+			str += ",";
+		}
+	}
+	console.log(page)
+	$("#prev-button").attr("href", `?page=${page-1}&uc=${str}`);
+	$("#next-button").attr("href", `?page=${page+1}&uc=${str}`);
 }
 
 function listResults() {
@@ -100,10 +127,6 @@ function listResults() {
 			count ++;
 		}
 	}
-
-	$("#num-results").html(
-		`${count === 0 ? 'No' : count} result${count === 1 ? '' : 's'} found`
-	);
 
 	let regex = new RegExp(term, "i");
 	$(".info").each(function(_, element) {

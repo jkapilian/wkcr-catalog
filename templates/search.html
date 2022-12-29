@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<script>let results = {{results|tojson}}; let term="{{term}}"</script>
+<script>let results = {{results|tojson}}; let term="{{term}}"; let page = {{page}}; let uc = "{{uc}}";</script>
 <script src="{{url_for('static', filename='results.js')}}"></script>
 
 <div class="row title">
@@ -20,12 +20,12 @@
 <div class="col-md-12">
 
     <div class="row" id="num-results">
-        {% if results|length == 0 %}
+        {% if len == 0 %}
             No results found
-        {% elif results|length == 1 %}
+        {% elif len == 1 %}
             1 result found
         {% else %}
-            {{results|length}} results found
+            {{len}} results found
         {% endif %}
     </div>
 
@@ -52,12 +52,22 @@
 
 <div id="results"></div>
 
+
 <div id="pagination">
     {% if page > 1 %}
-        <a href="?page={{page - 1}}">prev</a>
+        <span class="pag-button">
+            <a id="prev-button" href="?page={{page - 1}}">prev</a>
+        </span>
     {% endif %}
+
+    <span class="pag-button">
+        Page {{page}} of {{max_page}}
+    </span>
+
     {% if page < max_page %}
-        <a href="?page={{page + 1}}">next</a>
+        <span class="pag-button">
+            <a id="next-button" href="?page={{page + 1}}">next</a>
+        </span>
     {% endif %}
 </div>
 

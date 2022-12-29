@@ -197,6 +197,7 @@ def home():
 @app.route('/search/<query>')
 def search(query):
    page = request.args.get("page", default=1, type=int)
+   uc = request.args.get("uc", default="")
    global collection
    global client
    queryLower = query.lower()
@@ -274,7 +275,7 @@ def search(query):
    ret = unflatten(results)
    max_page = math.ceil(results["found"]/10)
    
-   return render_template('search.html', query=query, results=ret, version='search', term=term, page=page, max_page = max_page)
+   return render_template('search.html', uc=uc, query=query, len=results["found"], results=ret, version='search', term=term, page=page, max_page = max_page)
 
 @app.route('/view/<id>')
 def view(id):
