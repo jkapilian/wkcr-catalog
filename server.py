@@ -198,7 +198,6 @@ def home():
 def search(query):
    page = request.args.get("page", default=1, type=int)
    uc = request.args.get("uc", default="")
-   global collection
    global client
    queryLower = query.lower()
    term = queryLower
@@ -283,11 +282,39 @@ def view(id):
 
 @app.route('/artist/<id>')
 def artist(id):
-   return 'will be implemented soon!'
+   page = request.args.get("page", default=1, type=int)
+   uc = request.args.get("uc", default="")
+   global client
+   term = id
+   results = client.collections['collection'].documents.search({
+      'q': term,
+      'query_by': ['artists', 'credits'],
+      'page': page
+   })
+   ret = unflatten(results)
+   max_page = math.ceil(results["found"]/10)
+
+   artist = requestWrapper(f'https://api.discogs.com/artists/{id}?token={TOKEN}')
+
+   return render_template('search.html', uc=uc, query=artist["name"], len=results["found"], results=ret, version='artist', term=term, page=page, max_page = max_page)
 
 @app.route('/label/<id>')
 def label(id):
-   return 'will be implemented soon!'
+   page = request.args.get("page", default=1, type=int)
+   uc = request.args.get("uc", default="")
+   global client
+   term = id
+   results = client.collections['collection'].documents.search({
+      'q': term,
+      'query_by': 'labels',
+      'page': page
+   })
+   ret = unflatten(results)
+   max_page = math.ceil(results["found"]/10)
+
+   label = requestWrapper(f'https://api.discogs.com/labels/{id}?token={TOKEN}')
+
+   return render_template('search.html', uc=uc, query=label["name"], len=results["found"], results=ret, version='label', term=term, page=page, max_page = max_page)
 
 if __name__ == '__main__':
    tomorrow = date.today() + timedelta(days=1)
