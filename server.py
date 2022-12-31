@@ -11,8 +11,15 @@ import json
 from dotenv import load_dotenv
 import typesense
 import math
+from flask_cas import CAS, login, logout, login_required
 
 app = Flask(__name__)
+cas = CAS(app, '/cas')
+app.config['CAS_SERVER'] = 'https://casdev.cc.columbia.edu'
+app.config['CAS_AFTER_LOGIN'] = 'secure'
+app.config['CAS_LOGIN_ROUTE'] = '/cas/login'
+app.config['CAS_LOGOUT_ROUTE'] = '/cas/logout'
+app.config['CAS_VALIDATE_ROUTE'] = '/cas/p3/serviceValidate'
 load_dotenv()
 TOKEN = os.environ.get('DISCOGS_API_KEY')
 # Use the application default credentials.
@@ -192,7 +199,12 @@ def unflatten(results):
 @app.route('/')
 def home():
    global count
-   return render_template('home.html', length=client.collections["collection"].retrieve()["num_documents"])
+   return render_template('home.html', length=client.collections["collection"].retrieve()["num_documents"], login=cas.username)
+
+@app.route('/secure')
+@login_required
+def secure():
+   return f'logged in! as {cas.username}'
 
 @app.route('/search/<query>')
 def search(query):
@@ -274,11 +286,11 @@ def search(query):
    ret = unflatten(results)
    max_page = math.ceil(results["found"]/10)
    
-   return render_template('search.html', uc=uc, query=query, len=results["found"], results=ret, version='search', term=term, page=page, max_page = max_page)
+   return render_template('search.html', uc=uc, query=query, len=results["found"], results=ret, version='search', term=term, page=page, max_page = max_page, login=cas.username)
 
 @app.route('/view/<id>')
 def view(id):
-   return render_template('view.html', item=for_view(id))
+   return render_template('view.html', item=for_view(id), login=cas.username)
 
 @app.route('/artist/<id>')
 def artist(id):
@@ -296,7 +308,7 @@ def artist(id):
 
    artist = requestWrapper(f'https://api.discogs.com/artists/{id}?token={TOKEN}')
 
-   return render_template('search.html', uc=uc, query=artist["name"], len=results["found"], results=ret, version='artist', term=term, page=page, max_page = max_page)
+   return render_template('search.html', uc=uc, query=artist["name"], len=results["found"], results=ret, version='artist', term=term, page=page, max_page = max_page, login=cas.username)
 
 @app.route('/label/<id>')
 def label(id):
@@ -314,7 +326,7 @@ def label(id):
 
    label = requestWrapper(f'https://api.discogs.com/labels/{id}?token={TOKEN}')
 
-   return render_template('search.html', uc=uc, query=label["name"], len=results["found"], results=ret, version='label', term=term, page=page, max_page = max_page)
+   return render_template('search.html', uc=uc, query=label["name"], len=results["found"], results=ret, version='label', term=term, page=page, max_page = max_page, login=cas.username)
 
 if __name__ == '__main__':
    tomorrow = date.today() + timedelta(days=1)
@@ -322,6 +334,7 @@ if __name__ == '__main__':
    delta = (next_2am_eastern - datetime.now()).total_seconds()
    threading.Timer(0, updateCollection).start()
    try:
+      app.secret_key = 'test'
       app.run(debug = False, use_reloader = False)
    except KeyboardInterrupt:
       os._exit(1)
