@@ -21,8 +21,8 @@ TOKEN = os.environ.get('DISCOGS_API_KEY')
 client = typesense.Client({
    'api_key': 'xyz',
    'nodes': [{
-      'host': 'localhost',
-      'port': '8108',
+      'host': 'typesense',
+      'port': '8100',
       'protocol': 'http'
    }],
    'connectionTimeoutSeconds': 2
@@ -322,6 +322,6 @@ if __name__ == '__main__':
    delta = (next_2am_eastern - datetime.now()).total_seconds()
    threading.Timer(0, updateCollection).start()
    try:
-      app.run(debug = False, use_reloader = False)
+      app.run(debug = False, use_reloader = False, host='0.0.0.0', port=8000)
    except KeyboardInterrupt:
       os._exit(1)

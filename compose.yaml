@@ -1,0 +1,20 @@
+services: 
+  web: 
+    build:
+     context: app
+     target: builder
+    stop_signal: SIGINT
+    ports: 
+      - '80:8000'
+    depends_on:
+      - typesense
+  typesense:
+    image: typesense/typesense:0.23.1
+    entrypoint: sh -c "/opt/typesense-server --data-dir /data --api-key=xyz --api-port=8100 --enable-cors"
+    ports:
+      - '8100:8100'
+    volumes:
+      - typesense-data:/data
+volumes:
+  typesense-data:
+    driver: local
