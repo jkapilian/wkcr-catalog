@@ -322,6 +322,6 @@ if __name__ == '__main__':
    delta = (next_2am_eastern - datetime.now()).total_seconds()
    threading.Timer(0, updateCollection).start()
    try:
-      app.run(debug = False, use_reloader = False, host='0.0.0.0', port=8000)
+      app.run(debug = False, use_reloader = False, host='0.0.0.0', port=80)
    except KeyboardInterrupt:
       os._exit(1)
