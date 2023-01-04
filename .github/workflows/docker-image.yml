@@ -44,7 +44,7 @@ jobs:
       #    labels: ${{ steps.meta.outputs.labels }}
       
       - name: Build Docker image
-        run: docker compose -f {{ steps.meta.outputs.tags }} build
+        run: docker compose build
       
       - name: Push Docker image
-        run: docker compose -f {{ steps.meta.outputs.tags }} push
+        run: docker compose push
