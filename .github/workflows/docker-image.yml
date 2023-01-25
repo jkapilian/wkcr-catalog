@@ -35,19 +35,10 @@ jobs:
         with:
           images: my-docker-hub-namespace/my-docker-hub-repository
       
-      # - name: Build and push Docker image
-      #  uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
-      #  with:
-      #    context: .
-      #    push: true
-      #    tags: ${{ steps.meta.outputs.tags }}
-      #    labels: ${{ steps.meta.outputs.labels }}
-      
-      - name: Build Docker image
-        run: docker compose build
-      
-      - name: Get Docker info
-        run: docker image ls
-      
-      - name: Push Docker image
-        run: docker push wkcr-catalog-web
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: app
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
