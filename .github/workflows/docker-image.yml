@@ -46,5 +46,8 @@ jobs:
       - name: Build Docker image
         run: docker compose build
       
+      - name: Get Docker info
+        run: docker image ls
+      
       - name: Push Docker image
-        run: docker compose push web
+        run: docker push wkcr-catalog-web
