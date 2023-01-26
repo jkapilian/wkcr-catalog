@@ -63,8 +63,8 @@ jobs:
         id: 'compute-ssh'
         uses: 'google-github-actions/ssh-compute@v0'
         with:
-          instance_name: 'example-instance'
-          zone: 'us-central1-a'
+          instance_name: 'library-site'
+          zone: 'us-central1-c'
           ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
           command: 'cd /home/library/wkcr-library; git pull; docker compose up --build -d'
 
