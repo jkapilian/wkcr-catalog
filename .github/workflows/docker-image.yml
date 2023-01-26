@@ -61,7 +61,7 @@ jobs:
       
       - name: Check IAM
         run: |-
-          gcloud auth login
+          gcloud auth login --no-launch-browser
           gcloud projects get-iam-policy library-site
 
       - name: SSH into Google Cloud and redeploy
