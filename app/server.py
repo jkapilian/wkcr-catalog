@@ -254,7 +254,7 @@ def search(query):
       term = queryLower[7:].strip()
       results = client.collections['collection'].documents.search({
          'q': term,
-         'query_by': ['artists', 'credits'],
+         'query_by': 'artists,credits',
          'page': page
       })
    elif queryLower[0:6] == "label:":
@@ -267,7 +267,7 @@ def search(query):
    else:
       results = client.collections['collection'].documents.search({
          'q': queryLower,
-         'query_by': ['title', 'artists', 'year', 'tracklist', 'country', 'labels', 'genres', 'styles', 'credits', 'notes'],
+         'query_by': 'title,artists,year,tracklist,country,labels,genres,styles,credits,notes',
          'page': page
       })
 
