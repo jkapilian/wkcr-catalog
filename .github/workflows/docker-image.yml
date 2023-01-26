@@ -43,6 +43,10 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
   deploy_to_gcloud:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    
     name: Deploy to Google Cloud
     runs-on: ubuntu-latest
     steps:
