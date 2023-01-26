@@ -58,6 +58,9 @@ jobs:
         with:
           workload_identity_provider: 'projects/1083452708352/locations/global/workloadIdentityPools/github-actions/providers/github-actions'
           service_account: 'github-actions@wkcr-library.iam.gserviceaccount.com'
+      
+      - name: Check IAM
+        run: gcloud projects get-iam-policy library-site
 
       - name: SSH into Google Cloud and redeploy
         id: 'compute-ssh'
