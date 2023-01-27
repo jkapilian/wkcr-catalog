@@ -17,7 +17,8 @@ load_dotenv()
 TOKEN = os.environ.get('DISCOGS_API_KEY')
 # Use the application default credentials.
 
-
+# give Typesense time to boot
+time.sleep(3)
 client = typesense.Client({
    'api_key': 'xyz',
    'nodes': [{
@@ -27,19 +28,24 @@ client = typesense.Client({
    }],
    'connectionTimeoutSeconds': 2
 })
-'''client.collections['collection'].delete()
 
-client.collections.create({
-   "name": "collection",
-   "fields": [
-      {"name": ".*", "type": "auto" },
-      # {"name": "artists", "type": "auto", "index": False},
-      # {"name": "labels", "type": "auto", "index": False},
-      # {"name": "credits", "type": "auto", "index": False},
-      # {"name": "tracklist", "type": "auto", "index": False},
-      # {"name": "identifiers", "type": "auto", "index": False}
-   ]
-})'''
+
+'''client.collections['collection'].delete()'''
+
+try:
+   client.collections['collection'].retrieve()
+except:
+   client.collections.create({
+      "name": "collection",
+      "fields": [
+         {"name": ".*", "type": "auto" },
+         # {"name": "artists", "type": "auto", "index": False},
+         # {"name": "labels", "type": "auto", "index": False},
+         # {"name": "credits", "type": "auto", "index": False},
+         # {"name": "tracklist", "type": "auto", "index": False},
+         # {"name": "identifiers", "type": "auto", "index": False}
+      ]
+   })
 
 
 
