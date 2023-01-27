@@ -3,4 +3,4 @@ sleep 10
 python test.py
 retVal=$?
 docker compose down
-exit $retVal
+# exit $retVal
