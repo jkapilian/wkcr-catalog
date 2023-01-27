@@ -60,3 +60,13 @@ jobs:
           ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
           user: library
           command: 'cd /home/library/wkcr-catalog; git pull; sudo docker compose up --build -d'
+  
+  notify_slack:
+    name: Notify Slack
+    needs: deploy_to_gcloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 'actions/checkout@v2'
+
+      - name: Send message
+        run: curl -X POST -H 'Content-type: application/json' --data '{"text": "@channel A new version of the Library catalog has been deployed. See changes at https://github.com/jkapilian/wkcr-catalog/commit/$GITHUB_SHA and the live site at http://library.wkcr.org"}' ${{ secrets.SLACK_WEBHOOK}}
