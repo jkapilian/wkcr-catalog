@@ -24,7 +24,7 @@ jobs:
 
       - name: Set test env
         working-directory: app
-        run: echo ${{ secrets.DISCOGS_API_KEY }} | .env
+        run: echo ${{ secrets.DISCOGS_API_KEY }} > .env
     
       - name: Run test script
         working-directory: test
