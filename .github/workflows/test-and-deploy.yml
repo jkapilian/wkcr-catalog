@@ -26,7 +26,7 @@ jobs:
         working-directory: test
         run: |-
           chmod 777 test.sh
-          ./test.sh && docker logs wkcr-catalog-web-1
+          ./test.sh
         shell: bash
       
   deploy_to_gcloud:
