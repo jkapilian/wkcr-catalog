@@ -71,7 +71,7 @@ jobs:
           instance_name: 'library-site'
           zone: 'us-central1-c'
           ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
-          command: 'cd /home/library/wkcr-library; git pull; docker compose up --build -d'
+          command: 'cd /home/library/wkcr-catalog; git pull; docker compose up --build -d'
 
       # Example of using the output
       - id: 'test'
