@@ -21,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run test script
-        run: test.sh
         working-directory: test
+        run: test.sh
         shell: bash
       
   deploy_to_gcloud:
