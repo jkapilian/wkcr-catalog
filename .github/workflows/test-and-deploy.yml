@@ -20,6 +20,8 @@ jobs:
     name: Run integration tests
     runs-on: ubuntu-latest
     steps:
+      - uses: 'actions/checkout@v2'
+    
       - name: Run test script
         working-directory: test
         run: test.sh
