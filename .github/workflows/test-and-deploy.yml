@@ -20,8 +20,13 @@ jobs:
     name: Run integration tests
     runs-on: ubuntu-latest
     steps:
+      - uses: 'actions/checkout@v2'
+    
       - name: Run test script
-        run: ./test/test.sh
+        working-directory: test
+        run: |-
+          chmod 777 test.sh
+          ./test.sh
         shell: bash
       
   deploy_to_gcloud:
@@ -42,11 +47,6 @@ jobs:
           workload_identity_provider: 'projects/1083452708352/locations/global/workloadIdentityPools/github-actions/providers/github-actions'
           service_account: 'github-actions@wkcr-library.iam.gserviceaccount.com'
       
-      #- name: Check IAM
-      #  run: |-
-      #    gcloud auth login --no-launch-browser
-      #    gcloud projects get-iam-policy library-site
-
       - name: SSH into Google Cloud and redeploy
         id: 'compute-ssh'
         uses: 'google-github-actions/ssh-compute@v0'
