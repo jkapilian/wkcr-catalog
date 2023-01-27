@@ -27,6 +27,7 @@ jobs:
         run: |-
           chmod 777 test.sh
           ./test.sh
+          docker logs wkcr-catalog-web
         shell: bash
       
   deploy_to_gcloud:
