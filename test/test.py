@@ -1,5 +1,4 @@
 import requests
-import time
 
 # test that homepage loads
 r = requests.get('http://localhost')
