@@ -5,9 +5,11 @@ services:
      target: builder
     stop_signal: SIGINT
     ports: 
-      - '80:80'
+      - '8000:8000'
     depends_on:
       - typesense
+    volumes:
+      - web_static:/app/static
   typesense:
     image: typesense/typesense:0.23.1
     entrypoint: sh -c "/opt/typesense-server --data-dir /data --api-key=xyz --api-port=8100 --enable-cors"
@@ -15,6 +17,16 @@ services:
       - '8100:8100'
     volumes:
       - typesense-data:/data
+  webproxy:
+    image: nginx
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - web_static:/var/www-data
+
 volumes:
   typesense-data:
+    driver: local
+  web_static:
     driver: local

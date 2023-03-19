@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 import typesense
 import math
 
-app = Flask(__name__)
+application = Flask(__name__)
 load_dotenv()
 TOKEN = os.environ.get('DISCOGS_API_KEY')
 # Use the application default credentials.
@@ -195,12 +195,12 @@ def unflatten(results):
 # ROUTES
 
 
-@app.route('/')
+@application.route('/')
 def home():
    global count
    return render_template('home.html', length=client.collections["collection"].retrieve()["num_documents"])
 
-@app.route('/search/<query>')
+@application.route('/search/<query>')
 def search(query):
    page = request.args.get("page", default=1, type=int)
    uc = request.args.get("uc", default="")
@@ -282,11 +282,11 @@ def search(query):
    
    return render_template('search.html', uc=uc, query=query, len=results["found"], results=ret, version='search', term=term, page=page, max_page = max_page)
 
-@app.route('/view/<id>')
+@application.route('/view/<id>')
 def view(id):
    return render_template('view.html', item=for_view(id))
 
-@app.route('/artist/<id>')
+@application.route('/artist/<id>')
 def artist(id):
    page = request.args.get("page", default=1, type=int)
    uc = request.args.get("uc", default="")
@@ -304,7 +304,7 @@ def artist(id):
 
    return render_template('search.html', uc=uc, query=artist["name"], len=results["found"], results=ret, version='artist', term=term, page=page, max_page = max_page)
 
-@app.route('/label/<id>')
+@application.route('/label/<id>')
 def label(id):
    page = request.args.get("page", default=1, type=int)
    uc = request.args.get("uc", default="")
@@ -328,6 +328,6 @@ if __name__ == '__main__':
    delta = (next_2am_eastern - datetime.now()).total_seconds()
    threading.Timer(0, updateCollection).start()
    try:
-      app.run(debug = False, use_reloader = False, host='0.0.0.0', port=80)
+      application.run(debug = False, use_reloader = False, host='0.0.0.0', port=80)
    except KeyboardInterrupt:
       os._exit(1)
