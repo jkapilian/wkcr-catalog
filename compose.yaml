@@ -8,6 +8,7 @@ services:
       - '8000:8000'
     depends_on:
       - typesense
+      - data-refresh
     volumes:
       - web_static:/app/static
   typesense:
@@ -24,6 +25,15 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - web_static:/var/www-data
+    depends_on:
+      - web
+  data-refresh:
+    build:
+      context: discogs-update
+      target: builder
+    stop_signal: SIGINT
+    depends_on:
+      - typesense
 
 volumes:
   typesense-data:
