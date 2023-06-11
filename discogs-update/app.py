@@ -28,17 +28,21 @@ client = typesense.Client({
 try:
    client.collections['collection'].retrieve()
 except:
-   client.collections.create({
-      "name": "collection",
-      "fields": [
-         {"name": ".*", "type": "auto" },
-         # {"name": "artists", "type": "auto", "index": False},
-         # {"name": "labels", "type": "auto", "index": False},
-         # {"name": "credits", "type": "auto", "index": False},
-         # {"name": "tracklist", "type": "auto", "index": False},
-         # {"name": "identifiers", "type": "auto", "index": False}
-      ]
-   })
+   try:
+      client.collections.create({
+         "name": "collection",
+         "fields": [
+            {"name": ".*", "type": "auto" },
+            # {"name": "artists", "type": "auto", "index": False},
+            # {"name": "labels", "type": "auto", "index": False},
+            # {"name": "credits", "type": "auto", "index": False},
+            # {"name": "tracklist", "type": "auto", "index": False},
+            # {"name": "identifiers", "type": "auto", "index": False}
+         ]
+      })
+   except:
+      # in case initial try catch failed because of 503 but collection already exists
+      client.collections['collection'].retrieve()
 
 last_rate = 0
 
