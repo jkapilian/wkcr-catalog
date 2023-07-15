@@ -25,6 +25,8 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - web_static:/var/www-data
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
     depends_on:
       - web
   data-refresh:
@@ -34,9 +36,22 @@ services:
     stop_signal: SIGINT
     depends_on:
       - typesense
+  certbot:
+    image: certbot/certbot
+    depends_on:
+      - webproxy
+    volumes:
+      - web_static:/var/www-data
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+    command: certonly --webroot --webroot-path=/var/www-data --email library@wkcr.org --agree-tos --no-eff-email --staging -d library.wkcr.org 
 
 volumes:
   typesense-data:
     driver: local
   web_static:
+    driver: local
+  certbot-etc:
+    driver: local
+  certbot-var:
     driver: local
