@@ -206,7 +206,7 @@ def artist(id):
    term = id
    results = client.collections['collection'].documents.search({
       'q': term,
-      'query_by': ['artists', 'credits'],
+      'query_by': 'artists,credits',
       'page': page
    })
    ret = unflatten(results)
