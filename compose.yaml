@@ -44,7 +44,7 @@ services:
       - web_static:/var/www-data
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
-    command: certonly --webroot --webroot-path=/var/www-data --email library@wkcr.org --agree-tos --no-eff-email --staging -d library.wkcr.org 
+    command: certonly --webroot --webroot-path=/var/www-data --email library@wkcr.org --agree-tos --no-eff-email --force-renewal -d library.wkcr.org 
 
 volumes:
   typesense-data:
