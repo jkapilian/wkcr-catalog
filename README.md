@@ -152,7 +152,7 @@ To run the catalog locally,
 * Clone this repository by running `git clone git@github.com:jkapilian/wkcr-catalog.git` in the directory of your choosing.
 * Place two files into the `app/` and `discogs-update/` directories entitled `.env`.
   - Include the text `DISCOGS_API_KEY=<YOUR_API_KEY>` into the file.
-  - While not ideal to have two duplicate environment files, Python's dotenv does not handle environment files not in the same directory well.
+  - While not ideal to have two duplicate environment files, `python-dotenv` does not handle environment files not in the same directory well.
 * Run `docker compose up --build --force-recreate -d` to build the service and to update new changes.
 * Navigate to http://localhost:8080 to access the locally running site.
 * Note: as SSL certificates are not be stored locally, both `webproxy` and `cerbot` will exit.
