@@ -72,6 +72,6 @@ jobs:
     steps:
       - uses: 'actions/checkout@v2'
 
-      - name: Send message
+      - name: Send message with commit info
         run: |-
           curl -X POST -H 'Content-type: application/json' --data '{"text": "<!channel>\nA new version of the Library catalog has been deployed: ${{ github.event.head_commit.message }}\nSee changes at https://github.com/jkapilian/wkcr-catalog/commit/${{ github.sha }} and the live site at https://library.wkcr.org"}' ${{ secrets.SLACK_WEBHOOK }}
